@@ -1,0 +1,24 @@
+cockpit.gabbersaurewes.nl {
+	reverse_proxy https://192.168.178.60:9090
+}
+
+ejbca.gabbersaurewes.nl {
+	reverse_proxy https://192.168.178.151:443
+}
+
+projects.gabbersaurewes.nl {
+	reverse_proxy http://192.168.178.152:4190
+}
+git.gabbersaurewes.nl {
+	reverse_proxy http://192.168.178.152:4300
+}
+proxy.gabbersaurewes.nl {
+	reverse_proxy http://192.168.178.152:81
+}
+siem.gabbersaurewes.nl {
+	reverse_proxy https://192.168.178.152:8443
+}
+
+ilo.gabbersaurewes.nl {
+	reverse_proxy https://192.168.178.72:443
+}

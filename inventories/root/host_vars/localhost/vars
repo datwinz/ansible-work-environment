@@ -1,0 +1,7 @@
+---
+ansible_host: 192.168.178.60
+ansible_user: ansible
+ansible_password: "{{ vault_ansible_become_password }}"
+ca_ansible_password: "{{ vault_ca_ansible_password }}"
+server_ansible_password: "{{ vault_server_ansible_password }}"
+workstation_ansible_password: "{{ vault_workstation_ansible_password }}"

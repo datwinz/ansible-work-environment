@@ -1,0 +1,151 @@
+---
+- name: Ensure requirements are met
+  hosts: ca, server
+  
+  tasks:
+    - name: Update pip
+      become: true
+      ansible.builtin.pip:
+        name: pip
+        state: latest
+    - name: Install pip packages
+      ansible.builtin.pip:
+        name:
+         - docker
+         - paramiko
+         - pyyaml
+         - docker-compose
+
+- name: Setup VMs for docker
+  hosts: ca,server
+  become: true
+
+  tasks:
+    - name: Ensure docker service is running
+      ansible.builtin.service:
+        name: docker
+        enabled: yes
+        state: started
+
+- name: Setup ejbca compose application
+  hosts: ca
+
+  tasks:
+    - name: Copy folder over to ca
+      ansible.builtin.copy:
+        src: /home/ansible/playbooks/compose-files/ejbca/
+        dest: ejbca/
+    - name: Deploy EJBCA application
+      community.docker.docker_compose:
+        state: present
+        project_src: ejbca/
+
+- name: Setup taiga compose application
+  hosts: server
+
+  tasks:
+    - name: Copy folder over to server
+      ansible.builtin.copy:
+        src: /home/ansible/playbooks/compose-files/taiga-docker/
+        dest: taiga-docker/
+    - name: Deploy taiga application
+      community.docker.docker_compose:
+        state: present
+        project_src: taiga-docker/
+# Tried to run the command ansible.builtin.shell, tty: true and a literal block scalar, but that doesn't work. So manually it is.
+    - name: Instruction
+      ansible.builtin.debug:
+        msg: Please do docker exec -ti \*the taiga-back container\* manage.py createsuperuser on the server vm.
+
+- name: Setup gitea compose application
+  hosts: server
+
+  tasks:
+    - name: Copy folder over to server
+      ansible.builtin.copy:
+        src: /home/ansible/playbooks/compose-files/gitea/
+        dest: gitea/
+    - name: Deploy gitea compose application
+      community.docker.docker_compose:
+        state: present
+        project_src: gitea/
+
+- name: Setup nginx proxy compose application
+  hosts: server
+
+  tasks:
+    - name: Copy folder over to server
+      ansible.builtin.copy:
+        src: /home/ansible/playbooks/compose-files/nginx/
+        dest: nginx/
+    - name: Deploy nginx proxy application
+      community.docker.docker_compose:
+        state: present
+        project_src: nginx/
+
+#- name: Make server ready for FreeIPA
+#  hosts: server
+#  become: true
+#
+#  tasks:
+#    - name: Install BIND DNS packages
+#      ansible.builtin.dnf:
+#        name:
+#          - bind
+#          - bind-utils
+#        state: latest
+#    - name: Change IPv4 listen line in named.conf
+#      ansible.builtin.lineinfile:
+#        path: /etc/named.conf
+#        line: '        listen-on port 53 { 127.0.0.1; 192.168.178.152; };'
+#        regexp: 'listen-on port 53 \{'
+#        state: present
+#        validate: named-checkconf %s
+#    - name: Change IPv6 listen line in named.conf
+#      ansible.builtin.lineinfile:
+#        path: /etc/named.conf
+#        line: '        listen-on-v6 port 53 { ::1; 2a02:a465:302f:1:364:e0a9:29b9:7ed0; };'
+#        state: present
+#        regexp: 'listen-on-v6 port 53 \{'
+#        validate: named-checkconf %s
+#    - name: Change allow query line in named.conf
+#      ansible.builtin.lineinfile:
+#        path: /etc/named.conf
+#        line: '        allow-query { localhost; 192.168.178.0/24; 2a02:a465:302f:1::/64; };'
+#        state: present
+#        regexp: 'allow-query'
+#        validate: named-checkconf %s
+#    - name: Change allow recursion line in named.conf
+#      ansible.builtin.lineinfile:
+#        path: /etc/named.conf
+#        line: '        allow-recursion { localhost; 192.168.178.0/24; 2a02:a465:302f:1::/64; };'
+#        state: present
+#        regexp: 'recursion yes'
+#        validate: named-checkconf %s
+#    - name: Ensure named service is running
+#      ansible.builtin.service:
+#        name: named
+#        enabled: yes
+#        state: started
+#
+#- name: Setup FreeIPA server
+#  hosts: ipaserver
+#  become: true
+#  collections:
+#    - freeipa.ansible_freeipa
+#  vars:
+#    ipaserver_external_ca: yes
+#
+#  roles:
+#    - role: ipaserver
+#      state: present
+#
+#  post_tasks:
+#    - name: Copy CSR /root/ipa.csr from node to "{{ groups.ipaserver[0] + '-ipa.csr' }}"
+#      fetch:
+#        src: /root/ipa.csr
+#        dest: "{{ groups.ipaserver[0] + '-ipa.csr' }}"
+#        flat: yes
+
+# FreeIPA
+# Docusaurus

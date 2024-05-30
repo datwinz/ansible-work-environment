@@ -1,0 +1,36 @@
+---
+- name: Continue setting up FreeIPA server
+  hosts: ipaserver
+  become: true
+  collections:
+    - freeipa.ansible_freeipa
+  vars:
+    ipa_server_external_cert_files:
+      - /root/subca.pem
+      - /root/rootca.pem
+
+  pre_tasks:
+    - name: Copy "{{ groups.ipaserver[0] + '-subca.pem' }}" to /root/subca.pem on node
+      copy:
+        src: "{{ groups.ipaserver[0] + '-subca.pem' }}"
+        dest: /root/subca.pem
+        force: yes
+    - name: Copy "{{ groups.ipaserver[0] + '-rootca.pem' }}" to /root/rootca.pem on node
+      copy:
+        src: "{{ groups.ipaserver[0] + '-rootca.pem' }}"
+        dest: /root/rootca.pem
+        force: yes
+
+  roles:
+    - role: ipaserver
+      state: present
+
+- name: Setup FreeIPA clients
+  hosts: ipaclients
+  become: true
+  collections:
+    - freeipa.ansible_freeipa
+
+  roles:
+    - role: ipaclient
+      state: present

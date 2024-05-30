@@ -1,0 +1,66 @@
+- name: Deploys VM based on cloud image
+  hosts: localhost
+  become: true
+  vars:
+    pool_dir: "/var/lib/libvirt/images"
+    cleanup: no
+    vm1: ca
+    vcpus1: 1
+    ram_mb1: 1536
+    mac_address1: a8:bd:de:0b:32:52
+    base_image1: small_UNSAFE_PASSWORD.qcow2
+    image_sha1: 5e22645fa316422df78742d0b61463042d5005e9b2ee57c0d5e5ba6f5c043218
+    vm2: server
+    vcpus2: 2
+    ram_mb2: 6092
+    mac_address2: 52:59:b6:35:95:7c
+    base_image2: medium_UNSAFE_PASSWORD.qcow2
+    image_sha2: e4c3f3dfcb9c615b407bd3e46a06655d52d220e98c629ecc9f02bfabc474b604
+    vm3: workstation
+    vcpus3: 1
+    ram_mb3: 2560
+    mac_address3: a8:11:40:5d:a0:4d
+    base_image3: medium_UNSAFE_PASSWORD.qcow2
+    image_sha3: e4c3f3dfcb9c615b407bd3e46a06655d52d220e98c629ecc9f02bfabc474b604
+
+  tasks:
+    - name: Provision ca VM
+      include_role:
+        name: kvm_provision
+      vars:
+        libvirt_pool_dir: "{{ pool_dir }}"
+        cleanup_tmp: "{{ cleanup }}"
+        vm_name: "{{ vm1 }}"
+        vm_vcpus: "{{ vcpus1 }}"
+        vm_ram_mb: "{{ ram_mb1 }}"
+        vm_mac_address: "{{ mac_address1 }}"
+        base_image_name: "{{ base_image1 }}"
+        base_image_sha: "{{ image_sha1 }}"
+    - name: Provision server VM
+      include_role:
+        name: kvm_provision
+      vars:
+        libvirt_pool_dir: "{{ pool_dir }}"
+        cleanup_tmp: "{{ cleanup }}"
+        vm_name: "{{ vm2 }}"
+        vm_vcpus: "{{ vcpus2 }}"
+        vm_ram_mb: "{{ ram_mb2 }}"
+        vm_mac_address: "{{ mac_address2 }}"
+        base_image_name: "{{ base_image2 }}"
+        base_image_sha: "{{ image_sha2 }}"
+    - name: Provision workstation VM
+      include_role:
+        name: kvm_provision
+      vars:
+        libvirt_pool_dir: "{{ pool_dir }}"
+        cleanup_tmp: "{{ cleanup }}"
+        vm_name: "{{ vm3 }}"
+        vm_vcpus: "{{ vcpus3 }}"
+        vm_ram_mb: "{{ ram_mb3 }}"
+        vm_mac_address: "{{ mac_address3 }}"
+        base_image_name: "{{ base_image3 }}"
+        base_image_sha: "{{ image_sha3 }}"
+    
+    - name: Warning
+      ansible.builtin.debug:
+        msg: The ROOT PASSWORDS of the VMs are UNSAFE, continue with the next two playbooks or change it manually!

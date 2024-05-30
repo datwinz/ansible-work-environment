@@ -1,0 +1,124 @@
+---
+- name: Make ansible user on ca as root
+  hosts: ca
+  vars:
+    ansible_host_key_checking: false
+
+  tasks:
+    - name: Make ansible user
+      ansible.builtin.user:
+        name: ansible
+        system: true
+        password: "{{ ca_ansible_password }}"
+    - name: Give ansible sudo rights
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/ansible
+        line: 'ansible		ALL=(ALL:ALL) 	ALL'
+        state: present
+        create: yes
+        validate: /usr/sbin/visudo -cf %s
+    - name: Make .ssh folder and give proper permissions
+      ansible.builtin.shell: |
+        mkdir -p /home/ansible/.ssh
+        chown -R ansible:ansible /home/ansible/.ssh
+        chmod 755 /home/ansible/.ssh
+      args:
+        creates: /home/ansible/.ssh
+   
+- name: Make ansible user on server as root
+  hosts: server
+  vars:
+    ansible_host_key_checking: false
+
+  tasks:
+    - name: Make ansible user
+      ansible.builtin.user:
+        name: ansible
+        system: true
+        password: "{{ server_ansible_password }}"
+    - name: Give ansible sudo rights
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/ansible
+        line: 'ansible		ALL=(ALL:ALL) 	ALL'
+        state: present
+        create: yes
+        validate: /usr/sbin/visudo -cf %s
+    - name: Make .ssh folder and give proper permissions
+      ansible.builtin.shell: |
+        mkdir -p /home/ansible/.ssh
+        chown -R ansible:ansible /home/ansible/.ssh
+        chmod 755 /home/ansible/.ssh
+      args:
+        creates: /home/ansible/.ssh
+
+- name: Make ansible user on workstation as root
+  hosts: workstation
+  vars:
+    ansible_host_key_checking: false
+
+  tasks:
+    - name: Make ansible user
+      ansible.builtin.user:
+         name: ansible
+         system: true
+         password: "{{ workstation_ansible_password }}"
+    - name: Give ansible sudo rights
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/ansible
+        line: 'ansible		ALL=(ALL:ALL) 	ALL'
+        state: present
+        create: yes
+        validate: /usr/sbin/visudo -cf %s
+    - name: Make .ssh folder and give proper permissions
+      ansible.builtin.shell: |
+        mkdir -p /home/ansible/.ssh
+        chown -R ansible:ansible /home/ansible/.ssh
+        chmod 755 /home/ansible/.ssh
+      args:
+        creates: /home/ansible/.ssh
+
+- name: Generate key and copy it to vms
+  hosts: localhost
+  vars:
+    ansible_host_key_checking: false
+
+  tasks:
+    - name: Install required pip package paramiko
+      pip:
+        name: paramiko
+
+    - name: Generate SSH key
+      ansible.builtin.shell: |
+        mkdir -p ~/.ssh
+        ssh-keygen -q -b 521 -t ecdsa -N "" -f ~/.ssh/id_ecdsa
+      args:
+        creates: ~/.ssh/id_ecdsa
+
+    - name: Copy the SSH key to ca
+      include_role:
+        name: ansible_ssh_copy_id
+      vars:
+        hostname: 192.168.178.151
+        username: ansible
+        password: "{{ ca_ansible_password }}"
+        ssh_public_key: /home/ansible/.ssh/id_ecdsa.pub
+    - name: Copy the SSH key to server
+      include_role:
+        name: ansible_ssh_copy_id
+      vars:
+        hostname: 192.168.178.152
+        username: ansible
+        password: "{{ server_ansible_password }}"
+        ssh_public_key: /home/ansible/.ssh/id_ecdsa.pub
+    - name: Copy the SSH key to workstation
+      include_role:
+        name: ansible_ssh_copy_id
+      vars:
+        hostname: 192.168.178.153
+        username: ansible
+        password: "{{ workstation_ansible_password }}"
+        ssh_public_key: /home/ansible/.ssh/id_ecdsa.pub
+
+    - name: Warning
+      ansible.builtin.debug:
+        msg: The ROOT PASSWORDS of the VMs are UNSAFE, continue with the next two playbooks or change it manually!

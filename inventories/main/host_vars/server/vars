@@ -1,0 +1,6 @@
+---
+ansible_user: ansible
+ansible_become_password: "{{ vault_ansible_become_password }}"
+ansible_ssh_private_key_file: /home/ansible/.ssh/id_ecdsa
+ansible_host: 192.168.178.152
+taiga_password: "{{ vault_taiga_password }}"

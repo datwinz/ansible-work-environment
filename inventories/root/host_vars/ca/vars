@@ -1,0 +1,5 @@
+---
+ansible_user: root
+ansible_password: test123
+ansible_host: 192.168.178.151
+ca_ansible_password: "{{ vault_ca_ansible_password }}"

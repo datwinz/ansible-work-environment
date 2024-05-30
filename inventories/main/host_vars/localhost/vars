@@ -1,0 +1,4 @@
+---
+ansible_connection: local
+ansible_user: ansible
+ansible_become_password: "{{ vault_ansible_become_password }}"

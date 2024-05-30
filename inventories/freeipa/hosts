@@ -1,0 +1,5 @@
+[ipaserver]
+server
+
+[ipaclients]
+workstation

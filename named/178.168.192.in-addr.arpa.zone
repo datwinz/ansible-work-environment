@@ -1,0 +1,17 @@
+$TTL 8h
+@ IN SOA server.gabbersaurewes.nl. root.gabbersaurewes.nl. (
+                          2023122803 ; serial number
+                          1d         ; refresh period
+                          3h         ; retry period
+                          3d         ; expire time
+                          3h )       ; minimum TTL
+
+			IN	NS	server.gabbersaurewes.nl.
+server			IN	A	192.168.178.152
+152			IN	PTR	server.gabbersaurewes.nl.
+152			IN	PTR	projects.gabbersaurewes.nl.
+152			IN	PTR	gitea.gabbersaurewes.nl.
+152			IN	PTR	proxy.gabbersaurewes.nl.
+151			IN	PTR	ejbca.gabbersaurewes.nl.
+60			IN	PTR	cockpit.gabbersaurewes.nl.
+72			IN	PTR	ilo.gabbersaurewes.nl.

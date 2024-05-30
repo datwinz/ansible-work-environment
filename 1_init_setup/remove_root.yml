@@ -1,0 +1,15 @@
+---
+- name: Remove and lock root passwords
+  hosts: vms
+  become: true
+  vars:
+    ansible_host_key_checking: false
+
+  tasks:
+    - name: Remove and lock root password
+      ansible.builtin.user:
+        name: root
+        password: '!'
+        password_lock: true
+
+

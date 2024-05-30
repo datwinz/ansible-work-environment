@@ -1,0 +1,215 @@
+---
+- name: Packages on ca
+  hosts: ca
+  become: true
+
+  tasks:
+    - name: Ensure Docker repo is added
+      ansible.builtin.shell:
+        cmd: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+    - name: Ensure packages are removed
+      ansible.builtin.dnf:
+        name:
+          - libvirt
+          - qemu-kvm
+          - podman
+          - runc
+          - podman-docker
+          - podman-compose
+        state: absent
+    - name: Ensure packages are the latest version
+      ansible.builtin.dnf:
+        name:
+          - docker-ce
+          - python36
+          - firewalld
+        state: latest
+
+- name: Packages on server
+  hosts: server
+  become: true
+
+  tasks:
+    - name: Ensure Docker repo is added
+      ansible.builtin.shell:
+        cmd: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+    - name: Ensure packages are removed
+      ansible.builtin.dnf:
+        name:
+          - libvirt
+          - qemu-kvm
+        state: absent
+        autoremove: true
+    - name: Ensure packages are the latest version
+      ansible.builtin.dnf:
+        name:
+          - python36
+          - '@idm:DL1/dns'
+          - '@idm:DL1/adtrust'
+#          - '@Server product core'
+          - '@core'
+          - '@hardware-support'
+          - '@standard'
+#          - '@Server'
+#          - '@Container Management'
+#          - '@.Net Core Development'
+#          - '@RPM Development Tools'
+#          - '@Development Tools'
+#          - '@Headless Management'
+#          - '@Legacy Unix Compatibility'
+#          - '@Network servers'
+#          - '@Scientific Support'
+#          - '@Security Tools'
+#          - '@Smart Card Support'
+#          - '@System Tools'
+        state: latest
+    - name: Remove packages for Docker
+      ansible.builtin.dnf:
+        name:
+          - podman
+          - runc
+          - podman-docker
+          - podman-compose
+        state: absent
+    - name: Ensure Docker is the latest version
+      ansible.builtin.dnf:
+        name:
+          - docker-ce
+        state: latest
+
+- name: Packages on workstation
+  hosts: workstation
+  become: true
+
+  tasks:
+    - name: Ensure packages are removed
+      ansible.builtin.dnf:
+        name:
+          - libvirt
+          - qemu-kvm
+        state: absent
+        autoremove: true
+    - name: Ensure packages are the latest version
+      ansible.builtin.dnf:
+        name:
+          - langpacks-nl
+          - python36
+          - '@idm:DL1/client'
+          - '@Workstation'
+#          - '@Container Management'
+#          - '@.Net Core Development'
+#          - '@RPM Development Tools'
+#          - '@Development Tools'
+#          - '@Graphical Administration Tools'
+#          - '@Headless Management'
+#          - '@Legacy Unix Compatibility'
+#          - '@Network Servers'
+#          - '@Scientific Support'
+#          - '@Security Tools'
+#          - '@Smart Card Support'
+#          - '@System Tools'
+        state: latest
+
+- name: Firewall on ca
+  hosts: ca
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.6
+
+  tasks:
+    - name: Ensure firewalld service is running
+      ansible.builtin.service:
+        name: firewalld
+        enabled: yes
+        state: started
+    - name: Add https service
+      ansible.posix.firewalld:
+        service: https
+        permanent: true
+        state: enabled
+        immediate: true
+
+- name: Firewall on server
+  hosts: server
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.6
+
+  tasks:
+    - name: Ensure firewalld service is running
+      ansible.builtin.service:
+        name: firewalld
+        enabled: yes
+        state: started
+    - name: Add freeipa service
+      ansible.posix.firewalld:
+        service: freeipa-4
+        permanent: true
+        state: enabled
+        immediate: true
+    - name: Add dns service
+      ansible.posix.firewalld:
+        service: dns
+        permanent: true
+        state: enabled
+        immediate: true
+    - name: Add ntp service
+      ansible.posix.firewalld:
+        service: ntp
+        permanent: true
+        state: enabled
+        immediate: true
+    - name: Add https service
+      ansible.posix.firewalld:
+        service: https
+        permanent: true
+        state: enabled
+        immediate: true
+    - name: Add http service
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: true
+
+- name: Firewall on workstation
+  hosts: workstation
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.6
+
+  tasks:
+    - name: Ensure firewalld service is running
+      ansible.builtin.service:
+        name: firewalld
+        enabled: yes
+        state: started
+
+- name: User groups
+  hosts: ca,server 
+  become: true
+
+  tasks:
+    - name: Add ansible to docker group
+      ansible.builtin.user:
+        name: ansible
+        groups: docker
+        append: true
+
+- name: Systemd targets
+  hosts: workstation
+  become: true
+
+  tasks:
+    - name: Get default target on workstation
+      ansible.builtin.shell:
+        cmd: systemctl get-default
+      register: systemdefault
+    - name: Set graphical target on workstation
+      ansible.builtin.shell:
+        cmd: systemctl set-default graphical.target
+      when: '"graphical" not in systemdefault'

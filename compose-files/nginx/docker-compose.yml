@@ -1,0 +1,7 @@
+services:
+  nginx:
+    image: nginx:1.26.0
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./nginx-conf.d:/etc/nginx/conf.d
